@@ -3,6 +3,7 @@
 # import some python modules that we'll use.  These are all
 # available in Python's core
 
+import traceback
 import datetime
 import sys
 import json
@@ -111,7 +112,7 @@ class GrubKernelFlag:
         value = value_str.strip()
         self.is_kv = "=" in value
         if self.is_kv:
-            (self.key, self.value) = value.split("=")
+            (self.key, self.value) = value.split("=", 1)
         else:
             self.key = value_str
 
@@ -325,24 +326,25 @@ def run_command():
             )
 
     args = module.params
-    grubfile = args['file']
+    grubfile = args.get('grubfile')
     # Get the flag name to set
-    flag_value = args['flag']
+    flag_value = args.get('flag')
     # if we have a value use that as value, otherwise we aree simply setting a flag
     if "value" in args:
-        flag_value = "{0}={1}".format(args['flag'], args['value'])
+        flag_value = "{0}={1}".format(args.get('flag'), args.get('value'))
 
     # Start the actual work
     try:
         grubconf = GrubConfig(grubfile)
-        did_updates = grubconf.update_flag(flag_value, args['state'])
+        did_updates = grubconf.update_flag(flag_value, args.get('state'))
         grubconf.save()
 
         # Show if we did something
         module.exit_json(flag=flag_value, changed=did_updates)
 
     except Exception as e:
-        module.fail_json(msg=str(e))
+
+        module.fail_json(msg=str(e), trace=traceback.format_exc(e))
 
 
 
