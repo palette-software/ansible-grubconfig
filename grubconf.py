@@ -315,20 +315,17 @@ class GrubConfig:
 
 def run_command():
 
-    args = get_ansible_args()
+    module = AnsibleModule(
+            argument_spec = dict(
+                grubfile  = dict(default='/etc/grub.conf', aliases=['file']),
+                state     = dict(default='present', choices=['present', 'absent']),
+                flag      = dict(aliases=['name'], required=True),
+                value     = dict(default=None),
+                )
+            )
 
-    # Check for flag passed
-    if "flag" not in args:
-        print json.dumps({
-            "failed" : True,
-            "msg"    : "No 'flag' parameter provided"
-        })
-        sys.exit(1)
-
-
-
+    args = module.params
     grubfile = args['file']
-
     # Get the flag name to set
     flag_value = args['flag']
     # if we have a value use that as value, otherwise we aree simply setting a flag
@@ -342,16 +339,10 @@ def run_command():
         grubconf.save()
 
         # Show if we did something
-        print json.dumps({
-            "flag" : args['flag'],
-            "changed" : did_updates,
-        })
+        module.exit_json(flag=flag_value, changed=did_updates)
 
     except Exception as e:
-        print json.dumps({
-            "failed" : True,
-            "msg"    : str(e),
-        })
+        module.fail_json(msg=str(e))
 
 
 
