@@ -9,7 +9,61 @@ import json
 import os
 import shlex
 
-from collections import namedtuple
+DOCUMENTATION = '''
+module: grubconf
+version_added: historical
+short_description: Editing GRUB config files (/etc/grub.conf)
+
+description:
+     - Adds and removes kernel flags from /etc/grub.conf in a repeatable way.
+
+options:
+  file:
+    description:
+      - "The grub.conf file to edit."
+    required: false
+    default: "/etc/grub.conf"
+
+  flag:
+    description:
+      - "The name of the kernel flag. Can either be KEY or KEY=VALUE formatted."
+    required: true
+    default: null
+    aliases: [ 'name' ]
+
+  state:
+    description:
+      - Whether to add/set (C(present)), or remove (C(absent)) the flag.
+    required: false
+    choices: [ "present", "absent"]
+    default: "present"
+
+  value:
+    description:
+      - If the flag to be changed is of the KEY=VALUE type, this parameter
+        specifies the value for the flag (if the flag is already set with a
+        different value, it overrides the existing flag)
+    required: false
+    default: null
+    aliases: []
+
+# informational: requirements for nodes
+requirements: [ ]
+author:
+    - "Palette Software / Starschema"
+    - "Gyula Laszlo"
+'''
+
+EXAMPLES = '''
+- name: Add 'transparent_hugepages=never' to the kernel flags
+  grubconfig: flag=transparent_hugepages value=never
+
+- name: Remove the 'rhgb' flag from the kernel flags
+  grubconfig: flag=rhgb state=absent
+
+- name: Add the 'quiet' flag
+  grubconfig: flag=quiet state=present
+'''
 
 DEFAULT_ARGS = {
         # The GRUB config file to target
@@ -301,6 +355,9 @@ def run_command():
 
 
 
-run_command()
 
 
+# import module snippets
+from ansible.module_utils.basic import *
+if __name__ == '__main__':
+    run_command()
